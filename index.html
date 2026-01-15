@@ -18,8 +18,8 @@
 
         .compass-container {
             position: relative;
-            width: 320px;
-            height: 320px;
+            width: 300px;
+            height: 300px;
             margin: 0 auto;
             transition: transform 0.1s ease-out;
         }
@@ -27,10 +27,10 @@
         /* 外部固定準心線 (手機指向) */
         .crosshair {
             position: absolute;
-            top: -20px;
+            top: -15px;
             left: 50%;
             width: 2px;
-            height: 360px;
+            height: 330px;
             background: rgba(234, 179, 8, 0.3);
             transform: translateX(-50%);
             z-index: 5;
@@ -57,15 +57,7 @@
             box-shadow: 0 0 40px rgba(0,0,0,0.6);
             overflow: hidden;
             /* 旋轉過渡效果 */
-            transition: transform 0.2s cubic-bezier(0.1, 0.1, 0.25, 1);
-        }
-
-        .gua-container {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
+            transition: transform 0.3s cubic-bezier(0.1, 0.1, 0.25, 1);
         }
 
         .gua-item {
@@ -81,8 +73,8 @@
         }
 
         .gua-label {
-            margin-top: 45px;
-            font-size: 1.25rem;
+            margin-top: 40px;
+            font-size: 1.15rem;
             font-weight: 900;
             text-shadow: 0 0 10px rgba(0,0,0,0.8);
             z-index: 10;
@@ -103,23 +95,30 @@
             top: 50%;
             left: 50%;
             width: 6px;
-            height: 140px;
+            height: 130px;
             background: linear-gradient(to bottom, #ef4444 50%, #f8fafc 50%);
             transform: translate(-50%, -100%);
             z-index: 30;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            transition: background 0.3s;
+        }
+
+        /* 第三階段：全紅指針 */
+        .needle.is-final {
+            background: #ef4444 !important;
         }
 
         .building-marker {
             position: absolute;
-            top: -15px;
+            top: -12px;
             left: 50%;
-            width: 24px;
-            height: 24px;
+            width: 20px;
+            height: 20px;
             color: #fbbf24;
             z-index: 40;
             filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.8));
+            transition: transform 0.3s cubic-bezier(0.1, 0.1, 0.25, 1);
         }
 
         .status-badge {
@@ -127,27 +126,22 @@
             border-radius: 8px;
             font-size: 1rem;
             font-weight: bold;
-            transition: all 0.3s;
         }
 
-        .wang { background-color: #059669; color: white; box-shadow: 0 0 15px rgba(5, 150, 105, 0.4); }
-        .shuai { background-color: #dc2626; color: white; box-shadow: 0 0 15px rgba(220, 38, 38, 0.4); }
-        
-        #error-msg {
-            display: none;
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #fca5a5;
-            padding: 12px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            margin-top: 15px;
-            line-height: 1.4;
-        }
+        .wang { background-color: #059669; color: white; }
+        .shuai { background-color: #dc2626; color: white; }
 
-        #permission-overlay {
-            background-color: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(6px);
+        #simulation-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 50;
         }
 
         .step-label {
@@ -160,30 +154,29 @@
 </head>
 <body class="flex flex-col h-screen p-4">
 
-    <header class="text-center mb-4">
+    <header class="text-center mb-2">
         <h1 class="text-2xl font-bold text-amber-400">三元納氣助手</h1>
         <p class="text-[10px] tracking-widest text-slate-500 uppercase font-bold">San Yuan Qi Intake Assistant</p>
-        <p class="text-xs text-slate-400 mt-1 font-light">下元九運 (2024-2043) | Period 9</p>
     </header>
 
     <!-- Progress Steps -->
-    <div class="flex justify-between mb-6 px-8 relative">
+    <div class="flex justify-between mb-4 px-8 relative">
         <div class="absolute top-1/2 left-0 w-full h-0.5 bg-slate-800 -z-10"></div>
         <div class="flex flex-col items-center">
-            <div id="step-dot-1" class="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center font-bold text-slate-900 border-4 border-slate-900 transition-colors">1</div>
+            <div id="step-dot-1" class="w-7 h-7 rounded-full bg-amber-500 flex items-center justify-center font-bold text-slate-900 border-2 border-slate-900 transition-colors">1</div>
             <span class="step-label">大樓 Building</span>
         </div>
         <div class="flex flex-col items-center">
-            <div id="step-dot-2" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-slate-500 border-4 border-slate-900 transition-colors">2</div>
+            <div id="step-dot-2" class="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center font-bold text-slate-500 border-2 border-slate-900 transition-colors">2</div>
             <span class="step-label">單元 Unit</span>
         </div>
         <div class="flex flex-col items-center">
-            <div id="step-dot-3" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-slate-500 border-4 border-slate-900 transition-colors">3</div>
+            <div id="step-dot-3" class="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center font-bold text-slate-500 border-2 border-slate-900 transition-colors">3</div>
             <span class="step-label">判定 Result</span>
         </div>
     </div>
 
-    <div class="flex-1 flex flex-col items-center justify-center">
+    <div class="flex-1 flex flex-col items-center justify-start pt-4">
         <p id="instruction" class="text-sm text-center mb-6 text-slate-300 px-4 h-12 flex items-center justify-center">請點擊下方按鈕啟動測量...</p>
 
         <div class="compass-container">
@@ -191,57 +184,52 @@
             <div id="building-pointer" class="hidden building-marker">
                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z"/></svg>
             </div>
-            
             <div id="compass-disk" class="compass-disk">
                 <svg id="disk-bg" viewBox="0 0 100 100" class="w-full h-full transform -rotate-[112.5deg]">
-                    <!-- JS Generated Background Sectors -->
+                    <!-- JS Generated Sectors -->
                 </svg>
                 <div id="gua-layer" class="gua-container"></div>
             </div>
-            <div class="needle"></div>
+            <div id="compass-needle" class="needle"></div>
         </div>
 
-        <div class="mt-10 grid grid-cols-2 gap-4 w-full max-w-xs">
-            <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 text-center">
-                <div class="text-slate-500 text-xs mb-1">方位角 Azimuth</div>
-                <div id="current-deg" class="text-xl font-mono font-bold text-amber-400">0°</div>
+        <div class="mt-8 grid grid-cols-2 gap-4 w-full max-w-xs">
+            <div id="azimuth-card" class="bg-slate-800/80 p-3 rounded-xl text-center border border-slate-700">
+                <div class="text-slate-500 text-[10px] mb-1">方位角 Azimuth</div>
+                <div id="current-deg" class="text-lg font-mono font-bold text-amber-400">0°</div>
             </div>
-            <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 text-center">
-                <div class="text-slate-500 text-xs mb-1">卦位 Trigram</div>
-                <div id="current-gua" class="text-xl font-bold">--</div>
+            <div id="trigram-card" class="bg-slate-800/80 p-3 rounded-xl text-center border border-slate-700">
+                <div class="text-slate-500 text-[10px] mb-1">卦位 Trigram</div>
+                <div id="current-gua" class="text-lg font-bold text-white">--</div>
             </div>
             <div id="status-container" class="col-span-2 flex justify-center mt-2 opacity-0 transition-opacity">
                 <span id="gua-status" class="status-badge">--</span>
             </div>
         </div>
         
-        <div id="error-msg" class="max-w-xs text-center"></div>
+        <div id="error-msg" class="max-w-xs text-center mt-4 hidden text-red-400 text-xs bg-red-900/20 p-2 rounded-lg"></div>
     </div>
 
-    <div class="mt-auto pb-8 space-y-4">
-        <button id="main-btn" onclick="handleMainAction()" class="w-full bg-amber-500 hover:bg-amber-600 active:scale-95 transition-all text-slate-900 font-bold py-4 rounded-2xl shadow-xl text-lg">
-            啟動讀取 Start Tracking
+    <div class="pb-16 px-4 space-y-3">
+        <button id="main-btn" onclick="handleMainAction()" class="w-full bg-amber-500 text-slate-900 font-bold py-4 rounded-2xl shadow-xl text-lg active:scale-95 transition-transform">
+            啟動測量 Start Tracking
         </button>
-        <button onclick="resetAll()" class="w-full text-slate-500 text-sm font-medium">重置所有數據 Reset Data</button>
-
-        <!-- Semi-transparent Permission Overlay -->
-        <div id="permission-overlay" class="fixed inset-0 z-[100] flex items-center justify-center p-8 hidden text-center">
-            <div class="max-w-xs bg-slate-800 p-8 rounded-3xl border border-slate-700 shadow-2xl">
-                <div class="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <span class="text-3xl">🧭</span>
-                </div>
-                <h2 class="text-2xl font-bold mb-2">啟用感測器</h2>
-                <p class="text-xs tracking-widest text-slate-500 mb-6 uppercase font-bold">Sensor Permission</p>
-                <p class="text-slate-400 mb-8 text-sm leading-relaxed text-sm">請點擊下方按鈕以啟用裝置指南針數據讀取。</p>
-                <button onclick="requestPermission()" class="w-full bg-amber-500 text-slate-900 font-bold py-4 rounded-xl shadow-lg text-lg">授權並開啟 Allow</button>
-            </div>
-        </div>
+        <button onclick="resetAll()" class="w-full text-slate-500 text-[10px] font-medium uppercase tracking-widest">重置測量 Reset Data</button>
     </div>
 
-    <!-- Simulation -->
-    <div class="fixed bottom-0 left-0 w-full p-2 bg-black/40 text-[10px] flex items-center gap-2 opacity-30 hover:opacity-100 transition-opacity">
-        <span class="text-white">模擬轉向 Sim:</span>
-        <input type="range" min="0" max="360" value="0" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer" oninput="simulateHeading(this.value)">
+    <!-- Simulation Bar for Desktop Testing -->
+    <div id="simulation-bar" class="opacity-20 hover:opacity-100 transition-opacity">
+        <span class="text-white text-[9px] whitespace-nowrap opacity-60">模擬角:</span>
+        <input type="range" min="0" max="360" value="0" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500" oninput="simulateHeading(this.value)">
+        <span id="sim-val" class="text-amber-400 font-mono text-[10px] w-6 text-right">0</span>
+    </div>
+
+    <div id="permission-overlay" class="fixed inset-0 z-[100] flex items-center justify-center p-8 hidden text-center">
+        <div class="max-w-xs bg-slate-800 p-8 rounded-3xl border border-slate-700 shadow-2xl">
+            <h2 class="text-2xl font-bold mb-4">啟動指南針</h2>
+            <p class="text-slate-400 mb-8 text-sm leading-relaxed">請點擊下方按鈕以啟用裝置指南針，確保判定方向的精確度。</p>
+            <button onclick="requestPermission()" class="w-full bg-amber-500 text-slate-900 font-bold py-4 rounded-xl text-lg">授權並開啟 Allow</button>
+        </div>
     </div>
 
     <script>
@@ -261,9 +249,12 @@
         let currentHeading = 0;
         let buildingAngle = null;
         let unitOffset = 0;
+        let lockedDiskRotation = 0; // 記錄鎖定瞬間羅盤相對於螢幕的角度
         let step = 0; 
         let sensorActive = false;
         let sensorDataReceived = false;
+        let lastAppliedRotation = 0;
+        let lastAppliedMarkerRotation = 0;
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
         function initCompassUI() {
@@ -290,45 +281,60 @@
             });
         }
 
+        function getShortestRotation(target, current) {
+            let diff = (target - (current % 360));
+            if (diff > 180) diff -= 360;
+            if (diff < -180) diff += 360;
+            return current + diff;
+        }
+
         function updateHeading(val) {
             sensorDataReceived = true;
-            document.getElementById('error-msg').style.display = 'none';
             currentHeading = (val + 360) % 360;
-            
-            let diskRotation = 0;
+            let diskTarget = 0;
+            const needle = document.getElementById('compass-needle');
 
             if (step === 0) {
-                // 初始階段：羅盤隨手機轉動 (固定在螢幕上，方便對準)
-                diskRotation = 0;
-            } 
-            else if (step === 1) {
-                // 第一階段（取得大樓盤後）：進入反向動態平衡
-                // 盤面固定在物理方位基準，不隨手機轉動
-                diskRotation = buildingAngle - currentHeading;
-            } 
-            else if (step === 2) {
-                // 第二階段（取得單元盤後）：恢復羅盤可以轉動的狀態
-                // 盤面隨手機靈敏旋轉，顯示單元專屬納氣方位
-                diskRotation = (buildingAngle + unitOffset) - currentHeading;
+                // 初始階段：隨指南針旋轉
+                diskTarget = -currentHeading;
+                needle.classList.remove('is-final');
+            } else if (step === 1) {
+                // 第一階段鎖定：完全固定在點擊鎖定瞬間的角度，不隨手機轉動
+                diskTarget = lockedDiskRotation;
+                needle.classList.remove('is-final');
+            } else if (step === 2) {
+                // 第二階段同步：恢復旋轉模式 (反向動態平衡)
+                // 補償 unitOffset 讓起始點對齊 Step 1 的靜止角度
+                diskTarget = unitOffset - currentHeading;
+                needle.classList.add('is-final');
             }
 
-            document.getElementById('compass-disk').style.transform = `rotate(${diskRotation}deg)`;
+            lastAppliedRotation = getShortestRotation(diskTarget, lastAppliedRotation);
+            document.getElementById('compass-disk').style.transform = `rotate(${lastAppliedRotation}deg)`;
             
             if (step >= 1) {
                 const marker = document.getElementById('building-pointer');
-                marker.style.transform = `translateX(-50%) rotate(${buildingAngle - currentHeading}deg)`;
+                let mTarget = buildingAngle - currentHeading;
+                lastAppliedMarkerRotation = getShortestRotation(mTarget, lastAppliedMarkerRotation);
+                marker.style.transform = `translateX(-50%) rotate(${lastAppliedMarkerRotation}deg)`;
             }
 
             document.getElementById('current-deg').innerText = `${Math.round(currentHeading)}°`;
             
-            // 判定目前手機指向在盤面中的哪一卦
-            let evaluationAngle = (currentHeading - (step === 2 ? unitOffset : 0) + 360) % 360;
-            const info = getGuaInfo(evaluationAngle);
+            // 判定顯示邏輯
+            let evalAngle = currentHeading;
+            if (step === 2) {
+                evalAngle = (currentHeading - unitOffset + 360) % 360;
+            } else if (step === 1) {
+                // 此階段顯示相對於大樓基準的方位差，但盤面不轉
+                evalAngle = (currentHeading - buildingAngle + 360) % 360;
+            }
+            
+            const info = getGuaInfo(evalAngle);
             document.getElementById('current-gua').innerText = info.name;
             
             if (step === 2) {
-                const container = document.getElementById('status-container');
-                container.style.opacity = "1";
+                document.getElementById('status-container').style.opacity = "1";
                 const badge = document.getElementById('gua-status');
                 badge.innerText = `九運：${info.status}氣`;
                 badge.className = `status-badge ${info.status === '旺' ? 'wang' : 'shuai'}`;
@@ -338,49 +344,49 @@
         function getGuaInfo(deg) {
             let normalized = (deg + 22.5) % 360;
             let idx = Math.floor(normalized / 45);
-            const name = GuaOrder[idx];
-            return { name, status: Period9Config[name].status };
+            return { name: GuaOrder[idx], status: Period9Config[GuaOrder[idx]].status };
         }
 
         function handleMainAction() {
             if (!sensorActive) { requestPermission(); return; }
-            if (step === 0) lockBuilding();
-            else if (step === 1) syncUnit();
-            else resetAll();
-        }
-
-        function lockBuilding() {
-            buildingAngle = currentHeading;
-            step = 1;
-            document.getElementById('building-pointer').classList.remove('hidden');
+            if (step === 0) { 
+                buildingAngle = currentHeading; 
+                lockedDiskRotation = -currentHeading; // 鎖定當下相對於手機的角度
+                step = 1; 
+                document.getElementById('building-pointer').classList.remove('hidden');
+            }
+            else if (step === 1) { 
+                // 核心關鍵：設定 unitOffset 以確保切換瞬間 (unitOffset - currentHeading) == lockedDiskRotation
+                unitOffset = lockedDiskRotation + currentHeading;
+                step = 2; 
+            }
+            else { resetAll(); }
             updateUI();
-        }
-
-        function syncUnit() {
-            // 計算單元門與大樓門的偏角
-            unitOffset = currentHeading - buildingAngle;
-            step = 2;
-            updateUI();
+            updateHeading(currentHeading);
         }
 
         function resetAll() {
-            step = 0; buildingAngle = null; unitOffset = 0;
+            step = 0; buildingAngle = null; unitOffset = 0; lockedDiskRotation = 0;
             document.getElementById('building-pointer').classList.add('hidden');
             document.getElementById('status-container').style.opacity = "0";
+            document.getElementById('compass-needle').classList.remove('is-final');
+            document.getElementById('azimuth-card').classList.remove('hidden');
+            document.getElementById('trigram-card').classList.remove('col-span-2');
             updateUI();
+            updateHeading(currentHeading);
         }
 
         async function requestPermission() {
             const errorEl = document.getElementById('error-msg');
-            errorEl.style.display = 'none';
+            errorEl.classList.add('hidden');
             if (isIOS && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 try {
                     const res = await DeviceOrientationEvent.requestPermission();
                     if (res === 'granted') sensorSuccess();
-                    else errorEl.innerHTML = "權限授權被拒絕。";
+                    else errorEl.innerText = "授權被拒絕。";
                 } catch (e) { 
-                    errorEl.innerHTML = `權限錯誤: ${e.message}<br>(Google Sites 可能阻隔了感測器讀取)`;
-                    errorEl.style.display = 'block';
+                    errorEl.innerText = "感應器錯誤: " + e.message;
+                    errorEl.classList.remove('hidden');
                 }
             } else { sensorSuccess(); }
         }
@@ -388,30 +394,19 @@
         function sensorSuccess() {
             sensorActive = true;
             document.getElementById('permission-overlay').classList.add('hidden');
-            startTracking();
-            setTimeout(() => {
-                if (!sensorDataReceived) {
-                    document.getElementById('error-msg').innerHTML = "讀取不到感應器。請確認使用手機瀏覽器並非在內嵌框架中。";
-                    document.getElementById('error-msg').style.display = 'block';
-                }
-            }, 2000);
+            const ev = isIOS ? 'deviceorientation' : 'deviceorientationabsolute';
+            window.addEventListener(ev, e => {
+                let h = isIOS ? e.webkitCompassHeading : (360 - e.alpha);
+                if (h !== undefined) updateHeading(h);
+            }, true);
             updateUI();
         }
 
-        function startTracking() {
-            if ('ondeviceorientationabsolute' in window) {
-                window.addEventListener('deviceorientationabsolute', e => {
-                    if (e.alpha !== null) updateHeading(360 - e.alpha);
-                }, true);
-            } else if ('ondeviceorientation' in window) {
-                window.addEventListener('deviceorientation', e => {
-                    if (isIOS && e.webkitCompassHeading !== undefined) updateHeading(e.webkitCompassHeading);
-                    else if (e.absolute && e.alpha !== null) updateHeading(360 - e.alpha);
-                }, true);
-            }
+        function simulateHeading(v) { 
+            sensorActive = true; 
+            document.getElementById('sim-val').innerText = v;
+            updateHeading(parseFloat(v)); 
         }
-
-        function simulateHeading(v) { sensorActive = true; sensorDataReceived = true; updateHeading(parseFloat(v)); }
 
         function updateUI() {
             const btn = document.getElementById('main-btn');
@@ -420,34 +415,35 @@
             const cls = { act: "bg-amber-500 text-slate-900", done: "bg-green-600 text-white", idle: "bg-slate-800 text-slate-500" };
 
             if (!sensorActive) {
-                btn.innerText = "啟動讀取 Start Tracking";
+                btn.innerText = "點擊啟動 Start Tracking";
                 ins.innerText = "請點擊按鈕授權感應器讀取...";
                 return;
             }
 
             if (step === 0) {
-                ins.innerText = "請對準建築大門正前方 (向外) 按下按鈕...";
+                ins.innerText = "請站在建築物大門口 (朝向室外)，按下鎖定大樓。";
                 btn.innerText = "鎖定大樓朝向 Lock Building";
-                dots[0].className = `w-8 h-8 rounded-full flex items-center justify-center font-bold border-4 border-slate-900 ${cls.act}`;
-                dots[1].className = dots[2].className = `w-8 h-8 rounded-full flex items-center justify-center font-bold border-4 border-slate-900 ${cls.idle}`;
+                dots[0].className = `w-7 h-7 rounded-full flex items-center justify-center font-bold border-2 border-slate-900 ${cls.act}`;
+                dots[1].className = dots[2].className = `w-7 h-7 rounded-full flex items-center justify-center font-bold border-2 border-slate-900 ${cls.idle}`;
             } else if (step === 1) {
-                ins.innerText = "大樓已定錨。目前盤面空間固定。請移動到單元門口按下同步...";
-                btn.innerText = "同步單元門 Sync Unit Door";
-                dots[0].className = `w-8 h-8 rounded-full flex items-center justify-center font-bold border-4 border-slate-900 ${cls.done}`;
-                dots[1].className = `w-8 h-8 rounded-full flex items-center justify-center font-bold border-4 border-slate-900 ${cls.act}`;
-                dots[2].className = `w-8 h-8 rounded-full flex items-center justify-center font-bold border-4 border-slate-900 ${cls.idle}`;
+                ins.innerText = "已固定大樓基準。請移動至單元大門，對準朝向後按下同步。";
+                btn.innerText = "同步單元門 Sync Unit";
+                dots[0].className = `w-7 h-7 rounded-full flex items-center justify-center font-bold border-2 border-slate-900 ${cls.done}`;
+                dots[1].className = `w-7 h-7 rounded-full flex items-center justify-center font-bold border-2 border-slate-900 ${cls.act}`;
+                dots[2].className = `w-7 h-7 rounded-full flex items-center justify-center font-bold border-2 border-slate-900 ${cls.idle}`;
             } else {
-                ins.innerText = "分析完成！目前羅盤恢復旋轉。請旋轉手機對準窗戶查看吉凶。";
+                ins.innerText = "判定盤生成。方位角已隱藏，請轉動手機對準氣口查看判定。";
                 btn.innerText = "重新測量 Restart";
-                dots[0].className = dots[1].className = `w-8 h-8 rounded-full flex items-center justify-center font-bold border-4 border-slate-900 ${cls.done}`;
-                dots[2].className = `w-8 h-8 rounded-full flex items-center justify-center font-bold border-4 border-slate-900 ${cls.act}`;
+                dots[0].className = dots[1].className = `w-7 h-7 rounded-full flex items-center justify-center font-bold border-2 border-slate-900 ${cls.done}`;
+                dots[2].className = `w-7 h-7 rounded-full flex items-center justify-center font-bold border-2 border-slate-900 ${cls.act}`;
+                
+                // 隱藏方位角，置中卦位
+                document.getElementById('azimuth-card').classList.add('hidden');
+                document.getElementById('trigram-card').classList.add('col-span-2');
             }
         }
 
-        window.onload = () => { initCompassUI(); updateUI();
-            if (!isIOS) { startTracking(); setTimeout(() => { if (!sensorDataReceived) document.getElementById('permission-overlay').classList.remove('hidden'); else sensorActive = true; updateUI(); }, 500);
-            } else { document.getElementById('permission-overlay').classList.remove('hidden'); }
-        };
+        window.onload = () => { initCompassUI(); updateUI(); };
     </script>
 </body>
 </html>

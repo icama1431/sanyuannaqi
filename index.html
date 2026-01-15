@@ -56,7 +56,7 @@
             background: #0f172a;
             box-shadow: 0 0 40px rgba(0,0,0,0.6);
             overflow: hidden;
-            /* 平滑旋轉過渡 */
+            /* 旋轉過渡效果 */
             transition: transform 0.2s cubic-bezier(0.1, 0.1, 0.25, 1);
         }
 
@@ -145,7 +145,6 @@
             line-height: 1.4;
         }
 
-        /* 半透明黑色遮罩 */
         #permission-overlay {
             background-color: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(6px);
@@ -187,7 +186,6 @@
     <div class="flex-1 flex flex-col items-center justify-center">
         <p id="instruction" class="text-sm text-center mb-6 text-slate-300 px-4 h-12 flex items-center justify-center">請點擊下方按鈕啟動測量...</p>
 
-        <!-- Compass Area -->
         <div class="compass-container">
             <div class="crosshair"></div>
             <div id="building-pointer" class="hidden building-marker">
@@ -200,11 +198,9 @@
                 </svg>
                 <div id="gua-layer" class="gua-container"></div>
             </div>
-            <!-- 指針始終指向螢幕上方 (手機正前方) -->
             <div class="needle"></div>
         </div>
 
-        <!-- Real-time Display -->
         <div class="mt-10 grid grid-cols-2 gap-4 w-full max-w-xs">
             <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 text-center">
                 <div class="text-slate-500 text-xs mb-1">方位角 Azimuth</div>
@@ -222,7 +218,6 @@
         <div id="error-msg" class="max-w-xs text-center"></div>
     </div>
 
-    <!-- Main Buttons -->
     <div class="mt-auto pb-8 space-y-4">
         <button id="main-btn" onclick="handleMainAction()" class="w-full bg-amber-500 hover:bg-amber-600 active:scale-95 transition-all text-slate-900 font-bold py-4 rounded-2xl shadow-xl text-lg">
             啟動讀取 Start Tracking
@@ -237,20 +232,19 @@
                 </div>
                 <h2 class="text-2xl font-bold mb-2">啟用感測器</h2>
                 <p class="text-xs tracking-widest text-slate-500 mb-6 uppercase font-bold">Sensor Permission</p>
-                <p class="text-slate-400 mb-8 text-sm leading-relaxed">請點擊下方按鈕以啟用裝置指南針，這將幫助我們判斷精確的納氣方向。</p>
+                <p class="text-slate-400 mb-8 text-sm leading-relaxed text-sm">請點擊下方按鈕以啟用裝置指南針數據讀取。</p>
                 <button onclick="requestPermission()" class="w-full bg-amber-500 text-slate-900 font-bold py-4 rounded-xl shadow-lg text-lg">授權並開啟 Allow</button>
             </div>
         </div>
     </div>
 
-    <!-- Simulation for non-mobile testing -->
+    <!-- Simulation -->
     <div class="fixed bottom-0 left-0 w-full p-2 bg-black/40 text-[10px] flex items-center gap-2 opacity-30 hover:opacity-100 transition-opacity">
         <span class="text-white">模擬轉向 Sim:</span>
         <input type="range" min="0" max="360" value="0" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer" oninput="simulateHeading(this.value)">
     </div>
 
     <script>
-        // 九運旺氣方：南(離)、西北(乾)、東北(艮)、西(兌)
         const Period9Config = {
             "坎": { angle: 0, status: '衰', color: 'rgba(220, 38, 38, 0.2)' },
             "艮": { angle: 45, status: '旺', color: 'rgba(5, 150, 105, 0.4)' },
@@ -275,14 +269,10 @@
         function initCompassUI() {
             const guaLayer = document.getElementById('gua-layer');
             const bgSvg = document.getElementById('disk-bg');
-            guaLayer.innerHTML = '';
-            bgSvg.innerHTML = '';
-
+            guaLayer.innerHTML = ''; bgSvg.innerHTML = '';
             GuaOrder.forEach((name, i) => {
                 const angle = i * 45;
                 const config = Period9Config[name];
-                
-                // 畫背景扇區
                 const x1 = 50 + 50 * Math.cos(Math.PI * 0 / 180);
                 const y1 = 50 + 50 * Math.sin(Math.PI * 0 / 180);
                 const x2 = 50 + 50 * Math.cos(Math.PI * 45 / 180);
@@ -292,8 +282,6 @@
                 path.setAttribute("fill", config.color);
                 path.setAttribute("transform", `rotate(${angle}, 50, 50)`);
                 bgSvg.appendChild(path);
-
-                // 畫卦位文字
                 const item = document.createElement('div');
                 item.className = 'gua-item';
                 item.style.transform = `rotate(${angle}deg)`;
@@ -310,42 +298,31 @@
             let diskRotation = 0;
 
             if (step === 0) {
-                // 初始狀態：羅盤跟隨手機旋轉 (Fixed to phone)
+                // 初始階段：羅盤隨手機轉動 (固定在螢幕上，方便對準)
                 diskRotation = 0;
             } 
             else if (step === 1) {
-                // 第一階段：鎖定大樓後進入「反向動態平衡」
-                // 盤面在物理空間固定，始終指向大樓正面
+                // 第一階段（取得大樓盤後）：進入反向動態平衡
+                // 盤面固定在物理方位基準，不隨手機轉動
                 diskRotation = buildingAngle - currentHeading;
             } 
             else if (step === 2) {
-                // 第二階段：同步單元後恢復「羅盤可以轉動」
-                // 此時盤面固定在手機螢幕上，顯示計算後的單元盤
-                // 盤面相對於手機的偏移由 unitOffset 決定
-                diskRotation = -unitOffset; 
+                // 第二階段（取得單元盤後）：恢復羅盤可以轉動的狀態
+                // 盤面隨手機靈敏旋轉，顯示單元專屬納氣方位
+                diskRotation = (buildingAngle + unitOffset) - currentHeading;
             }
 
-            const disk = document.getElementById('compass-disk');
-            disk.style.transform = `rotate(${diskRotation}deg)`;
+            document.getElementById('compass-disk').style.transform = `rotate(${diskRotation}deg)`;
             
-            // 更新大樓標記 (始終相對於盤面位置)
             if (step >= 1) {
                 const marker = document.getElementById('building-pointer');
-                // 標記在羅盤中的固定角度
                 marker.style.transform = `translateX(-50%) rotate(${buildingAngle - currentHeading}deg)`;
             }
 
-            // 更新數據顯示
             document.getElementById('current-deg').innerText = `${Math.round(currentHeading)}°`;
             
-            // 卦位判定 logic: 
-            // 在 Step 2 時，我們需要判定的是手機目前對準的方向在「單元盤」中是哪個卦位
-            let evaluationAngle = currentHeading;
-            if (step === 2) {
-                // 修正判定角度：單元門轉向時，對準的角度需補償建築盤的偏移
-                evaluationAngle = (currentHeading - unitOffset + 360) % 360;
-            }
-            
+            // 判定目前手機指向在盤面中的哪一卦
+            let evaluationAngle = (currentHeading - (step === 2 ? unitOffset : 0) + 360) % 360;
             const info = getGuaInfo(evaluationAngle);
             document.getElementById('current-gua').innerText = info.name;
             
@@ -380,7 +357,7 @@
         }
 
         function syncUnit() {
-            // 計算單元與建築的相對偏差，並固定最終盤面
+            // 計算單元門與大樓門的偏角
             unitOffset = currentHeading - buildingAngle;
             step = 2;
             updateUI();
@@ -396,7 +373,6 @@
         async function requestPermission() {
             const errorEl = document.getElementById('error-msg');
             errorEl.style.display = 'none';
-
             if (isIOS && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 try {
                     const res = await DeviceOrientationEvent.requestPermission();
@@ -406,9 +382,7 @@
                     errorEl.innerHTML = `權限錯誤: ${e.message}<br>(Google Sites 可能阻隔了感測器讀取)`;
                     errorEl.style.display = 'block';
                 }
-            } else {
-                sensorSuccess();
-            }
+            } else { sensorSuccess(); }
         }
 
         function sensorSuccess() {
@@ -417,9 +391,8 @@
             startTracking();
             setTimeout(() => {
                 if (!sensorDataReceived) {
-                    const errorEl = document.getElementById('error-msg');
-                    errorEl.innerHTML = "讀取不到感應器。請確認：<br>1. 使用手機瀏覽器<br>2. 網站具備 HTTPS 協定<br>3. 非內嵌於第三方框架中";
-                    errorEl.style.display = 'block';
+                    document.getElementById('error-msg').innerHTML = "讀取不到感應器。請確認使用手機瀏覽器並非在內嵌框架中。";
+                    document.getElementById('error-msg').style.display = 'block';
                 }
             }, 2000);
             updateUI();
@@ -438,11 +411,7 @@
             }
         }
 
-        function simulateHeading(v) { 
-            sensorActive = true; sensorDataReceived = true;
-            document.getElementById('error-msg').style.display = 'none';
-            updateHeading(parseFloat(v)); 
-        }
+        function simulateHeading(v) { sensorActive = true; sensorDataReceived = true; updateHeading(parseFloat(v)); }
 
         function updateUI() {
             const btn = document.getElementById('main-btn');
@@ -451,7 +420,7 @@
             const cls = { act: "bg-amber-500 text-slate-900", done: "bg-green-600 text-white", idle: "bg-slate-800 text-slate-500" };
 
             if (!sensorActive) {
-                btn.innerText = "點擊啟動 Start Tracking";
+                btn.innerText = "啟動讀取 Start Tracking";
                 ins.innerText = "請點擊按鈕授權感應器讀取...";
                 return;
             }
@@ -462,28 +431,22 @@
                 dots[0].className = `w-8 h-8 rounded-full flex items-center justify-center font-bold border-4 border-slate-900 ${cls.act}`;
                 dots[1].className = dots[2].className = `w-8 h-8 rounded-full flex items-center justify-center font-bold border-4 border-slate-900 ${cls.idle}`;
             } else if (step === 1) {
-                ins.innerText = "大樓定錨成功！現在盤面已固定。請移動到單元門口對準前方按下同步...";
+                ins.innerText = "大樓已定錨。目前盤面空間固定。請移動到單元門口按下同步...";
                 btn.innerText = "同步單元門 Sync Unit Door";
                 dots[0].className = `w-8 h-8 rounded-full flex items-center justify-center font-bold border-4 border-slate-900 ${cls.done}`;
                 dots[1].className = `w-8 h-8 rounded-full flex items-center justify-center font-bold border-4 border-slate-900 ${cls.act}`;
                 dots[2].className = `w-8 h-8 rounded-full flex items-center justify-center font-bold border-4 border-slate-900 ${cls.idle}`;
             } else {
-                ins.innerText = "分析完成！目前羅盤恢復轉動。請對準窗戶查看該方位納氣吉凶。";
+                ins.innerText = "分析完成！目前羅盤恢復旋轉。請旋轉手機對準窗戶查看吉凶。";
                 btn.innerText = "重新測量 Restart";
                 dots[0].className = dots[1].className = `w-8 h-8 rounded-full flex items-center justify-center font-bold border-4 border-slate-900 ${cls.done}`;
                 dots[2].className = `w-8 h-8 rounded-full flex items-center justify-center font-bold border-4 border-slate-900 ${cls.act}`;
             }
         }
 
-        window.onload = () => {
-            initCompassUI();
-            updateUI();
-            if (!isIOS) {
-                startTracking();
-                setTimeout(() => { if (!sensorDataReceived) document.getElementById('permission-overlay').classList.remove('hidden'); else sensorActive = true; updateUI(); }, 500);
-            } else {
-                document.getElementById('permission-overlay').classList.remove('hidden');
-            }
+        window.onload = () => { initCompassUI(); updateUI();
+            if (!isIOS) { startTracking(); setTimeout(() => { if (!sensorDataReceived) document.getElementById('permission-overlay').classList.remove('hidden'); else sensorActive = true; updateUI(); }, 500);
+            } else { document.getElementById('permission-overlay').classList.remove('hidden'); }
         };
     </script>
 </body>

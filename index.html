@@ -24,7 +24,7 @@
             transition: transform 0.1s ease-out;
         }
 
-        /* 外部固定準心線 */
+        /* 外部固定準心線 (手機指向) */
         .crosshair {
             position: absolute;
             top: -20px;
@@ -56,6 +56,7 @@
             background: #0f172a;
             box-shadow: 0 0 40px rgba(0,0,0,0.6);
             overflow: hidden;
+            /* 平滑旋轉過渡 */
             transition: transform 0.2s cubic-bezier(0.1, 0.1, 0.25, 1);
         }
 
@@ -147,7 +148,14 @@
         /* 半透明黑色遮罩 */
         #permission-overlay {
             background-color: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(6px);
+        }
+
+        .step-label {
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-top: 4px;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -159,16 +167,27 @@
         <p class="text-xs text-slate-400 mt-1 font-light">下元九運 (2024-2043) | Period 9</p>
     </header>
 
+    <!-- Progress Steps -->
     <div class="flex justify-between mb-6 px-8 relative">
         <div class="absolute top-1/2 left-0 w-full h-0.5 bg-slate-800 -z-10"></div>
-        <div id="step-dot-1" class="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center font-bold text-slate-900 border-4 border-slate-900 transition-colors">1</div>
-        <div id="step-dot-2" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-slate-500 border-4 border-slate-900 transition-colors">2</div>
-        <div id="step-dot-3" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-slate-500 border-4 border-slate-900 transition-colors">3</div>
+        <div class="flex flex-col items-center">
+            <div id="step-dot-1" class="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center font-bold text-slate-900 border-4 border-slate-900 transition-colors">1</div>
+            <span class="step-label">大樓 Building</span>
+        </div>
+        <div class="flex flex-col items-center">
+            <div id="step-dot-2" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-slate-500 border-4 border-slate-900 transition-colors">2</div>
+            <span class="step-label">單元 Unit</span>
+        </div>
+        <div class="flex flex-col items-center">
+            <div id="step-dot-3" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-slate-500 border-4 border-slate-900 transition-colors">3</div>
+            <span class="step-label">判定 Result</span>
+        </div>
     </div>
 
     <div class="flex-1 flex flex-col items-center justify-center">
-        <p id="instruction" class="text-sm text-center mb-6 text-slate-300 px-4 h-10">請點擊下方按鈕啟動測量...</p>
+        <p id="instruction" class="text-sm text-center mb-6 text-slate-300 px-4 h-12 flex items-center justify-center">請點擊下方按鈕啟動測量...</p>
 
+        <!-- Compass Area -->
         <div class="compass-container">
             <div class="crosshair"></div>
             <div id="building-pointer" class="hidden building-marker">
@@ -177,13 +196,15 @@
             
             <div id="compass-disk" class="compass-disk">
                 <svg id="disk-bg" viewBox="0 0 100 100" class="w-full h-full transform -rotate-[112.5deg]">
-                    <!-- JS Generated -->
+                    <!-- JS Generated Background Sectors -->
                 </svg>
                 <div id="gua-layer" class="gua-container"></div>
             </div>
+            <!-- 指針始終指向螢幕上方 (手機正前方) -->
             <div class="needle"></div>
         </div>
 
+        <!-- Real-time Display -->
         <div class="mt-10 grid grid-cols-2 gap-4 w-full max-w-xs">
             <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 text-center">
                 <div class="text-slate-500 text-xs mb-1">方位角 Azimuth</div>
@@ -198,37 +219,38 @@
             </div>
         </div>
         
-        <div id="error-msg" class="max-w-xs text-center">
-            <!-- Error messages will appear here -->
-        </div>
+        <div id="error-msg" class="max-w-xs text-center"></div>
     </div>
 
+    <!-- Main Buttons -->
     <div class="mt-auto pb-8 space-y-4">
         <button id="main-btn" onclick="handleMainAction()" class="w-full bg-amber-500 hover:bg-amber-600 active:scale-95 transition-all text-slate-900 font-bold py-4 rounded-2xl shadow-xl text-lg">
-            啟動指南針 Start
+            啟動讀取 Start Tracking
         </button>
         <button onclick="resetAll()" class="w-full text-slate-500 text-sm font-medium">重置所有數據 Reset Data</button>
 
-        <!-- Permission Dialog with Semi-transparent Background -->
+        <!-- Semi-transparent Permission Overlay -->
         <div id="permission-overlay" class="fixed inset-0 z-[100] flex items-center justify-center p-8 hidden text-center">
             <div class="max-w-xs bg-slate-800 p-8 rounded-3xl border border-slate-700 shadow-2xl">
-                <div class="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <span class="text-4xl">🧭</span>
+                <div class="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span class="text-3xl">🧭</span>
                 </div>
-                <h2 class="text-2xl font-bold mb-3">啟動羅盤感測器</h2>
-                <p class="text-sm tracking-tight text-slate-500 mb-4 uppercase font-bold">Sensor Activation</p>
-                <p class="text-slate-400 mb-8 leading-relaxed text-sm">請點擊下方按鈕以啟用裝置指南針，確保風水方位判定的精確度。</p>
+                <h2 class="text-2xl font-bold mb-2">啟用感測器</h2>
+                <p class="text-xs tracking-widest text-slate-500 mb-6 uppercase font-bold">Sensor Permission</p>
+                <p class="text-slate-400 mb-8 text-sm leading-relaxed">請點擊下方按鈕以啟用裝置指南針，這將幫助我們判斷精確的納氣方向。</p>
                 <button onclick="requestPermission()" class="w-full bg-amber-500 text-slate-900 font-bold py-4 rounded-xl shadow-lg text-lg">授權並開啟 Allow</button>
             </div>
         </div>
     </div>
 
+    <!-- Simulation for non-mobile testing -->
     <div class="fixed bottom-0 left-0 w-full p-2 bg-black/40 text-[10px] flex items-center gap-2 opacity-30 hover:opacity-100 transition-opacity">
         <span class="text-white">模擬轉向 Sim:</span>
         <input type="range" min="0" max="360" value="0" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer" oninput="simulateHeading(this.value)">
     </div>
 
     <script>
+        // 九運旺氣方：南(離)、西北(乾)、東北(艮)、西(兌)
         const Period9Config = {
             "坎": { angle: 0, status: '衰', color: 'rgba(220, 38, 38, 0.2)' },
             "艮": { angle: 45, status: '旺', color: 'rgba(5, 150, 105, 0.4)' },
@@ -253,9 +275,14 @@
         function initCompassUI() {
             const guaLayer = document.getElementById('gua-layer');
             const bgSvg = document.getElementById('disk-bg');
+            guaLayer.innerHTML = '';
+            bgSvg.innerHTML = '';
+
             GuaOrder.forEach((name, i) => {
                 const angle = i * 45;
                 const config = Period9Config[name];
+                
+                // 畫背景扇區
                 const x1 = 50 + 50 * Math.cos(Math.PI * 0 / 180);
                 const y1 = 50 + 50 * Math.sin(Math.PI * 0 / 180);
                 const x2 = 50 + 50 * Math.cos(Math.PI * 45 / 180);
@@ -265,6 +292,8 @@
                 path.setAttribute("fill", config.color);
                 path.setAttribute("transform", `rotate(${angle}, 50, 50)`);
                 bgSvg.appendChild(path);
+
+                // 畫卦位文字
                 const item = document.createElement('div');
                 item.className = 'gua-item';
                 item.style.transform = `rotate(${angle}deg)`;
@@ -278,27 +307,54 @@
             document.getElementById('error-msg').style.display = 'none';
             currentHeading = (val + 360) % 360;
             
-            // 動態平衡核心邏輯
-            // 手機轉動 currentHeading 時，盤面反向旋轉 -currentHeading
-            // 並加上步驟二產生的 unitOffset 偏轉量
-            const diskRotation = -currentHeading + unitOffset;
-            document.getElementById('compass-disk').style.transform = `rotate(${diskRotation}deg)`;
+            let diskRotation = 0;
+
+            if (step === 0) {
+                // 初始狀態：羅盤跟隨手機旋轉 (Fixed to phone)
+                diskRotation = 0;
+            } 
+            else if (step === 1) {
+                // 第一階段：鎖定大樓後進入「反向動態平衡」
+                // 盤面在物理空間固定，始終指向大樓正面
+                diskRotation = buildingAngle - currentHeading;
+            } 
+            else if (step === 2) {
+                // 第二階段：同步單元後恢復「羅盤可以轉動」
+                // 此時盤面固定在手機螢幕上，顯示計算後的單元盤
+                // 盤面相對於手機的偏移由 unitOffset 決定
+                diskRotation = -unitOffset; 
+            }
+
+            const disk = document.getElementById('compass-disk');
+            disk.style.transform = `rotate(${diskRotation}deg)`;
             
-            // 如果已定錨大樓朝向，標記隨盤移動
+            // 更新大樓標記 (始終相對於盤面位置)
             if (step >= 1) {
                 const marker = document.getElementById('building-pointer');
+                // 標記在羅盤中的固定角度
                 marker.style.transform = `translateX(-50%) rotate(${buildingAngle - currentHeading}deg)`;
             }
 
+            // 更新數據顯示
             document.getElementById('current-deg').innerText = `${Math.round(currentHeading)}°`;
-            const info = getGuaInfo(currentHeading);
+            
+            // 卦位判定 logic: 
+            // 在 Step 2 時，我們需要判定的是手機目前對準的方向在「單元盤」中是哪個卦位
+            let evaluationAngle = currentHeading;
+            if (step === 2) {
+                // 修正判定角度：單元門轉向時，對準的角度需補償建築盤的偏移
+                evaluationAngle = (currentHeading - unitOffset + 360) % 360;
+            }
+            
+            const info = getGuaInfo(evaluationAngle);
             document.getElementById('current-gua').innerText = info.name;
             
             if (step === 2) {
                 const container = document.getElementById('status-container');
                 container.style.opacity = "1";
-                document.getElementById('gua-status').innerText = `九運：${info.status}氣`;
-                document.getElementById('gua-status').className = `status-badge ${info.status === '旺' ? 'wang' : 'shuai'}`;
+                const badge = document.getElementById('gua-status');
+                badge.innerText = `九運：${info.status}氣`;
+                badge.className = `status-badge ${info.status === '旺' ? 'wang' : 'shuai'}`;
             }
         }
 
@@ -324,7 +380,7 @@
         }
 
         function syncUnit() {
-            // 在此時獲取最終納氣盤的固定偏轉值
+            // 計算單元與建築的相對偏差，並固定最終盤面
             unitOffset = currentHeading - buildingAngle;
             step = 2;
             updateUI();
@@ -347,7 +403,7 @@
                     if (res === 'granted') sensorSuccess();
                     else errorEl.innerHTML = "權限授權被拒絕。";
                 } catch (e) { 
-                    errorEl.innerHTML = `權限錯誤: ${e.message}<br>(Google Sites 內嵌可能阻擋感應器)`;
+                    errorEl.innerHTML = `權限錯誤: ${e.message}<br>(Google Sites 可能阻隔了感測器讀取)`;
                     errorEl.style.display = 'block';
                 }
             } else {
@@ -362,7 +418,7 @@
             setTimeout(() => {
                 if (!sensorDataReceived) {
                     const errorEl = document.getElementById('error-msg');
-                    errorEl.innerHTML = "偵測不到數據。請確保瀏覽器權限已開啟，且並非在內嵌框架(Iframe)中運行。";
+                    errorEl.innerHTML = "讀取不到感應器。請確認：<br>1. 使用手機瀏覽器<br>2. 網站具備 HTTPS 協定<br>3. 非內嵌於第三方框架中";
                     errorEl.style.display = 'block';
                 }
             }, 2000);
@@ -395,24 +451,24 @@
             const cls = { act: "bg-amber-500 text-slate-900", done: "bg-green-600 text-white", idle: "bg-slate-800 text-slate-500" };
 
             if (!sensorActive) {
-                btn.innerText = "啟動讀取 Start Tracking";
-                ins.innerText = "請先啟動感應器讀取功能...";
+                btn.innerText = "點擊啟動 Start Tracking";
+                ins.innerText = "請點擊按鈕授權感應器讀取...";
                 return;
             }
 
             if (step === 0) {
-                ins.innerText = "請對準建築大門正前方按下按鈕...";
+                ins.innerText = "請對準建築大門正前方 (向外) 按下按鈕...";
                 btn.innerText = "鎖定大樓朝向 Lock Building";
                 dots[0].className = `w-8 h-8 rounded-full flex items-center justify-center font-bold border-4 border-slate-900 ${cls.act}`;
                 dots[1].className = dots[2].className = `w-8 h-8 rounded-full flex items-center justify-center font-bold border-4 border-slate-900 ${cls.idle}`;
             } else if (step === 1) {
-                ins.innerText = "大樓定錨成功。請對準單元大門按下同步...";
+                ins.innerText = "大樓定錨成功！現在盤面已固定。請移動到單元門口對準前方按下同步...";
                 btn.innerText = "同步單元門 Sync Unit Door";
                 dots[0].className = `w-8 h-8 rounded-full flex items-center justify-center font-bold border-4 border-slate-900 ${cls.done}`;
                 dots[1].className = `w-8 h-8 rounded-full flex items-center justify-center font-bold border-4 border-slate-900 ${cls.act}`;
                 dots[2].className = `w-8 h-8 rounded-full flex items-center justify-center font-bold border-4 border-slate-900 ${cls.idle}`;
             } else {
-                ins.innerText = "最終納氣盤已鎖定。請旋轉手機對準窗戶查看吉凶。";
+                ins.innerText = "分析完成！目前羅盤恢復轉動。請對準窗戶查看該方位納氣吉凶。";
                 btn.innerText = "重新測量 Restart";
                 dots[0].className = dots[1].className = `w-8 h-8 rounded-full flex items-center justify-center font-bold border-4 border-slate-900 ${cls.done}`;
                 dots[2].className = `w-8 h-8 rounded-full flex items-center justify-center font-bold border-4 border-slate-900 ${cls.act}`;
